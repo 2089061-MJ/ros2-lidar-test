@@ -11,8 +11,6 @@ NUM_POINTS = 360
 RANGE_MIN = 0.12
 RANGE_MAX = 3.5
 
-
-# -------------------- 데이터 생성 -------------------------
 def create_empty_scan():
     ranges = [float(RANGE_MAX) for _ in range(NUM_POINTS)]
     intensities = [100.0 for _ in range(NUM_POINTS)]
@@ -61,8 +59,6 @@ def generate_single_scan(pattern_name):
 
 AVAILABLE_PATTERNS = ["front_wall", "left_wall", "right_wall"]
 
-
-# -------------------- ROS2 노드 -------------------------
 class LidarPublisher(Node):
     def __init__(self):
         super().__init__('lidar_mock_publisher')
@@ -90,8 +86,6 @@ class LidarPublisher(Node):
         self.publisher.publish(scan_msg)
         self.get_logger().info(f"Published Lidar Pattern: {pattern}")
 
-
-# -------------------- main -------------------------
 def main(args=None):
     rclpy.init(args=args)
     node = LidarPublisher()
