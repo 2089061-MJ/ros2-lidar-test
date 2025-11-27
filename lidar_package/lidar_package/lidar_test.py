@@ -3,6 +3,7 @@ from rclpy.node import Node
 import math
 import random
 from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import Twist
 
 ANGLE_MIN_DEG = 0
 ANGLE_MAX_DEG = 359
@@ -64,11 +65,8 @@ class LidarPublisher(Node):
         super().__init__('lidar_mock_publisher')
 
         # LaserScan 퍼블리셔
-        self.publisher = self.create_publisher(
-            LaserScan,
-            'lidar_scan',
-            10
-        )
+        self.publisher = self.create_publisher(LaserScan, 'lidar_scan', 10)
+        self.cmd_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
 
         # 2초마다 발행하는 타이머
         self.timer = self.create_timer(2.0, self.timer_callback)
@@ -85,6 +83,27 @@ class LidarPublisher(Node):
 
         self.publisher.publish(scan_msg)
         self.get_logger().info(f"Published Lidar Pattern: {pattern}")
+
+        cmd = self.turtle_action(pattern)
+        self.cmd_pub.publish(cmd)
+        self.get_logger().info(f"linear={cmd.linear.x:.2f}, angular={cmd.angular.z:.2f}")
+
+    def turtle_action(self, pattern):
+        cmd = Twist()
+
+        if pattern == "front_wall":
+            cmd.linear.x = 0.0
+            cmd.angular.z = 0.0
+
+        elif pattern == "left_wall":
+            cmd.linear.x = 0.2
+            cmd.angular.z = -0.7
+
+        elif pattern == "right_wall":
+            cmd.linear.x = 0.2
+            cmd.angular.z = 0.7
+
+        return cmd
 
 def main(args=None):
     rclpy.init(args=args)
