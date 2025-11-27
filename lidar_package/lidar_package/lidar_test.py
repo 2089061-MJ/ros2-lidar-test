@@ -66,6 +66,8 @@ class LidarPublisher(Node):
 
         # LaserScan 퍼블리셔
         self.publisher = self.create_publisher(LaserScan, 'lidar_scan', 10)
+
+        # turtle의 cmd_vel 토픽을 발행
         self.cmd_pub = self.create_publisher(Twist, 'turtle1/cmd_vel', 10)
 
         # 2초마다 발행하는 타이머
@@ -88,17 +90,21 @@ class LidarPublisher(Node):
         self.cmd_pub.publish(cmd)
         self.get_logger().info(f"linear={cmd.linear.x:.2f}, angular={cmd.angular.z:.2f}")
 
+    # turtle1의 방향 제어
     def turtle_action(self, pattern):
         cmd = Twist()
 
+        # 앞에 벽이 있을 때 거북이를 멈춤
         if pattern == "front_wall":
             cmd.linear.x = 0.0
             cmd.angular.z = 0.0
 
+        # 왼쪽에 벽이 있을 때 거북이를 오른쪽으로 이동
         elif pattern == "left_wall":
             cmd.linear.x = 0.2
             cmd.angular.z = -0.7
 
+        # 오른쪽에 벽이 있을 때 거북이를 왼쪽으로 이동
         elif pattern == "right_wall":
             cmd.linear.x = 0.2
             cmd.angular.z = 0.7
