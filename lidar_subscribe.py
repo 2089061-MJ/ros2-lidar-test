@@ -1,5 +1,8 @@
 import roslibpy
 import numpy as np
+from db_helper import DB, DB_CONFIG
+from datetime import datetime
+import json
 
 ROS_IP = '192.168.112.128' 
 ROS_PORT = 9090
@@ -9,6 +12,10 @@ client = roslibpy.Ros(host=ROS_IP, port=ROS_PORT)
 
 client.run()
 print("ROSBridge 서버에 연결되었습니다.")
+
+# MySQL 서버
+db = DB(**DB_CONFIG)
+conn = db.connect()
 
 cmd_vel_pub = roslibpy.Topic(client, '/turtle1/cmd_vel', 'geometry_msgs/msg/Twist')
 
@@ -55,6 +62,19 @@ def lidar_callback(message):
     print(f"  Right: {right_dist:.2f} m")
     print("\n")
     print(action)
+    save_db(ranges, action)
+    
+def save_db(ranges, action):
+    conn = db.connect()
+    cursor = conn.cursor()
+    
+    sql = "INSERT INTO lidar_data (ranges, time, action) VALUES (%s, %s, %s)"
+    json_ranges = json.dumps(list(ranges))
+    data = (json_ranges, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), action)
+    
+    cursor.execute(sql, data)
+    conn.commit()
+    print("DB 저장 완료")
 
 try:
     listener.subscribe(lidar_callback)
@@ -65,4 +85,6 @@ except KeyboardInterrupt:
 finally:
     listener.unsubscribe()
     client.terminate()
-    print('연결 종료')
+    conn.cursor().close()
+    conn.close()
+    print('종료')
