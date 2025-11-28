@@ -56,7 +56,6 @@ def lidar_callback(message):
             'angular': {'x': 0.0, 'y': 0.0, 'z': 0.0}
         })
 
-        
     print("\n 수신")
     print(f"  Front: {front_dist:.2f} m")
     print(f"  Left : {left_dist:.2f} m")
@@ -119,8 +118,13 @@ finally:
     conn.cursor().close()
     conn.close()
     print('종료')
+
+    # 데이터 불러오기
     np_data = load_data(return_type="numpy")
     print(np_data.shape)
 
-    
-
+    # CSV 저장
+    csv_filename = f"lidar_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+    df_data = pd.DataFrame(np_data, columns=[f"range_{i}" for i in range(360)] + ["action"])
+    df_data.to_csv(csv_filename, index=False)
+    print(f"CSV 파일로 저장 완료: {csv_filename}")
