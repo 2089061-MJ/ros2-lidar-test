@@ -1,5 +1,6 @@
 import roslibpy
 import numpy as np
+import pandas as pd
 from db_helper import DB, DB_CONFIG
 from datetime import datetime
 import json
@@ -75,7 +76,37 @@ def save_db(ranges, action):
     cursor.execute(sql, data)
     conn.commit()
     print("DB 저장 완료")
+    
+def load_data(return_type="dataframe"):
+    conn = db.connect()
+    cursor = conn.cursor()
+    
+    sql = "SELECT ranges, action FROM lidar_data"
+    cursor.execute(sql)
+    
+    rows = cursor.fetchall()
+    data = []
+    
+    for row in rows:
+        ranges_json = row[0]  # 튜플 0번 인덱스: ranges
+        action = row[1]       # 튜플 1번 인덱스: action
 
+        ranges = json.loads(ranges_json)
+
+        if len(ranges) != 360:
+            print(f"Warning: ranges length != 360 (len={len(ranges)}) → 스킵")
+            continue
+
+        data.append(ranges + [action])
+
+    columns = [f"range_{i}" for i in range(360)] + ["action"]
+
+    df = pd.DataFrame(data, columns=columns)
+
+    if return_type == "numpy":
+        return df.to_numpy()
+    return df
+    
 try:
     listener.subscribe(lidar_callback)
     while client.is_connected:
@@ -88,3 +119,8 @@ finally:
     conn.cursor().close()
     conn.close()
     print('종료')
+    np_data = load_data(return_type="numpy")
+    print(np_data.shape)
+
+    
+
